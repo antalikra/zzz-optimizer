@@ -1,32 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useInventory } from "../../store/inventory";
 import { useSolver } from "./useSolver";
-import { SET_2PC, SETS, setIndex, toSolverValue, type Stat } from "../../domain/stats";
+import { type Stat } from "../../domain/stats";
 import { AGENTS, agentById } from "../../domain/agents";
-import type { Disc } from "../../domain/inventory";
-import type { DiscDto, ObjectiveDto, SolveRequest, SolveResponse } from "../../domain/solver";
+import { buildSetBonuses, discToDto } from "../../domain/solverRequest";
+import type { ObjectiveDto, SolveRequest, SolveResponse } from "../../domain/solver";
 
 type Kind = "damage" | "weighted" | "maxStat";
 const WEIGHT_STATS: Stat[] = ["CritRate", "CritDmg", "AtkPct", "Atk", "IceDmg"];
-
-function toDto(d: Disc): DiscDto {
-  return {
-    id: d.id,
-    set: setIndex(d.set),
-    slot: d.slot,
-    main: { stat: d.mainStat, value: toSolverValue(d.mainStat, d.mainValue) },
-    subs: d.subs.map((s) => ({ stat: s.stat, value: toSolverValue(s.stat, s.value) })),
-  };
-}
-
-function buildSetBonuses(): Record<string, { stat: string; value: number }> {
-  const out: Record<string, { stat: string; value: number }> = {};
-  SETS.forEach((name, idx) => {
-    const b = SET_2PC[name];
-    if (b) out[String(idx)] = { stat: b.stat, value: toSolverValue(b.stat, b.value) };
-  });
-  return out;
-}
 
 export function OptimizerPanel() {
   const discs = useInventory((s) => s.discs);
@@ -78,7 +59,7 @@ export function OptimizerPanel() {
     const req: SolveRequest = {
       objective: buildObjective(),
       base: { CritRate: agent.baseCritRate / 100, CritDmg: agent.baseCritDmg / 100 },
-      discs: discs.map(toDto),
+      discs: discs.map(discToDto),
       constraints: [],
       setBonuses: buildSetBonuses(),
       topN,

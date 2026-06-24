@@ -1,20 +1,22 @@
 import { useEffect, useState } from "react";
 import { useInventory } from "../store/inventory";
 import { requestPersist } from "../services/storage";
+import { BuildPage } from "../features/build/BuildPage";
 import { InventoryPanel } from "../features/inventory/InventoryPanel";
 import { OptimizerPanel } from "../features/optimizer/OptimizerPanel";
 import { DatabasePanel } from "../features/database/DatabasePanel";
 
-type Tab = "inventory" | "optimize" | "database";
+type Tab = "build" | "optimize" | "inventory" | "database";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "inventory", label: "Inventory" },
+  { id: "build", label: "Build" },
   { id: "optimize", label: "Optimize" },
+  { id: "inventory", label: "Inventory" },
   { id: "database", label: "Database" },
 ];
 
 export function App() {
-  const [tab, setTab] = useState<Tab>("inventory");
+  const [tab, setTab] = useState<Tab>("build");
 
   useEffect(() => {
     void useInventory.getState().hydrate();
@@ -41,8 +43,9 @@ export function App() {
         </nav>
       </header>
 
-      {tab === "inventory" && <InventoryPanel />}
+      {tab === "build" && <BuildPage />}
       {tab === "optimize" && <OptimizerPanel />}
+      {tab === "inventory" && <InventoryPanel />}
       {tab === "database" && <DatabasePanel />}
     </div>
   );
