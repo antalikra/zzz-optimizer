@@ -46,6 +46,29 @@ fn unknown_stat_returns_error() {
 }
 
 #[test]
+fn ellen_damage_objective_works() {
+    // camelCase fields (baseAtk/skillMv/levelFactor/resMult) must deserialize.
+    let req = r#"{
+      "objective": { "kind": "ellenDamage", "baseAtk": 2622, "skillMv": 1.5,
+        "enemy": { "def": 600, "levelFactor": 800, "resMult": 1.0 } },
+      "base": { "CritRate": 0.05, "CritDmg": 0.5 },
+      "discs": [
+        {"id":1,"set":0,"slot":1,"main":{"stat":"Atk","value":0},"subs":[{"stat":"IceDmg","value":0.05}]},
+        {"id":2,"set":0,"slot":2,"main":{"stat":"Atk","value":0},"subs":[{"stat":"CritDmg","value":0.2}]},
+        {"id":3,"set":0,"slot":3,"main":{"stat":"Atk","value":0},"subs":[]},
+        {"id":4,"set":0,"slot":4,"main":{"stat":"CritRate","value":0.24},"subs":[]},
+        {"id":5,"set":0,"slot":5,"main":{"stat":"IceDmg","value":0.30},"subs":[]},
+        {"id":6,"set":0,"slot":6,"main":{"stat":"AtkPct","value":0.30},"subs":[]}
+      ],
+      "topN": 1
+    }"#;
+    let v: serde_json::Value = serde_json::from_str(&solve_json(req)).unwrap();
+    assert_eq!(v["status"], "ok", "resp had error");
+    let score = v["builds"][0]["score"].as_f64().unwrap();
+    assert!(score > 0.0, "expected positive damage, got {score}");
+}
+
+#[test]
 fn set_bonus_is_applied() {
     // 6 discs of set 0, each +0.05 AtkPct -> 0.30; set-0 2pc bonus +0.10 (count 6 >= 2) -> 0.40.
     let req = r#"{

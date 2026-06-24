@@ -37,6 +37,9 @@ struct SolveRequest {
 enum ObjectiveDto {
     Weighted { weights: BTreeMap<String, f64> },
     MaxStat { stat: String },
+    // Variant-level rename_all: the enum-level one only renames the variant tags,
+    // not the fields inside a variant.
+    #[serde(rename_all = "camelCase")]
     EllenDamage { base_atk: f64, skill_mv: f64, enemy: EnemyDto },
 }
 
