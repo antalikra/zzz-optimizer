@@ -11,7 +11,7 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-use super::model::{fp_from_f64, Constraint, Disc};
+use super::model::{fp_from_f64, Constraint, Disc, SetBonuses};
 use super::{solve, Objective};
 use crate::domain::{Stat, STAT_COUNT};
 use crate::formula::library::{ellen_basic_hit, Enemy};
@@ -26,6 +26,9 @@ struct SolveRequest {
     discs: Vec<DiscDto>,
     #[serde(default)]
     constraints: Vec<ConstraintDto>,
+    /// set id (as string) -> 2-piece bonus. Optional.
+    #[serde(default)]
+    set_bonuses: BTreeMap<String, StatValueDto>,
     top_n: usize,
 }
 
@@ -161,7 +164,13 @@ fn run(req: &str) -> Result<String, String> {
         .map(|c| Ok::<_, String>(Constraint { stat: parse_stat(&c.stat)?, min: c.min }))
         .collect::<Result<_, _>>()?;
 
-    let builds = solve(&discs, &base, &objective, &constraints, r.top_n);
+    let mut bonuses = SetBonuses::new();
+    for (k, sv) in &r.set_bonuses {
+        let set: u16 = k.parse().map_err(|_| format!("bad set id: {k}"))?;
+        bonuses.set_two_piece(set, parse_stat(&sv.stat)?, fp_from_f64(sv.value));
+    }
+
+    let builds = solve(&discs, &base, &objective, &constraints, &bonuses, r.top_n);
     let resp = SolveResponse {
         status: "ok",
         message: None,

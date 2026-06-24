@@ -44,3 +44,25 @@ fn unknown_stat_returns_error() {
     let v: serde_json::Value = serde_json::from_str(&solve_json(req)).unwrap();
     assert_eq!(v["status"], "error");
 }
+
+#[test]
+fn set_bonus_is_applied() {
+    // 6 discs of set 0, each +0.05 AtkPct -> 0.30; set-0 2pc bonus +0.10 (count 6 >= 2) -> 0.40.
+    let req = r#"{
+      "objective": { "kind": "maxStat", "stat": "AtkPct" },
+      "setBonuses": { "0": { "stat": "AtkPct", "value": 0.10 } },
+      "discs": [
+        {"id":1,"set":0,"slot":1,"main":{"stat":"Atk","value":0},"subs":[{"stat":"AtkPct","value":0.05}]},
+        {"id":2,"set":0,"slot":2,"main":{"stat":"Atk","value":0},"subs":[{"stat":"AtkPct","value":0.05}]},
+        {"id":3,"set":0,"slot":3,"main":{"stat":"Atk","value":0},"subs":[{"stat":"AtkPct","value":0.05}]},
+        {"id":4,"set":0,"slot":4,"main":{"stat":"Atk","value":0},"subs":[{"stat":"AtkPct","value":0.05}]},
+        {"id":5,"set":0,"slot":5,"main":{"stat":"Atk","value":0},"subs":[{"stat":"AtkPct","value":0.05}]},
+        {"id":6,"set":0,"slot":6,"main":{"stat":"Atk","value":0},"subs":[{"stat":"AtkPct","value":0.05}]}
+      ],
+      "topN": 1
+    }"#;
+    let v: serde_json::Value = serde_json::from_str(&solve_json(req)).unwrap();
+    assert_eq!(v["status"], "ok", "resp had error");
+    let score = v["builds"][0]["score"].as_f64().unwrap();
+    assert!((score - 0.40).abs() < 1e-6, "score was {score}");
+}

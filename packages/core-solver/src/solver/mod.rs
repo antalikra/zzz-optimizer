@@ -8,5 +8,5 @@ pub mod model;
 pub mod search;
 
 pub use json::solve_json;
-pub use model::{BuildResult, Constraint, Disc, Objective};
+pub use model::{BuildResult, Constraint, Disc, Objective, SetBonuses};
 pub use search::{solve, solve_with};

@@ -6,6 +6,8 @@
 //! exact integer ordering. The nonlinear damage formula stays in `f64`: a build's
 //! assembled total is converted to `Stats` once per leaf (see `to_stats`).
 
+use std::collections::HashMap;
+
 use crate::domain::{Stat, Stats, STAT_COUNT};
 
 /// Fixed-point scale: stored integer = value × 1000.
@@ -85,4 +87,56 @@ pub fn to_stats(fp: &[i32; STAT_COUNT]) -> Stats {
         s.set(stat, fp_to_f64(fp[stat.index()]));
     }
     s
+}
+
+/// Set 2-piece stat bonuses. 4-piece EFFECTS are deferred (conditional buffs).
+/// Maps `set_id -> (stat, fixed-point value)`.
+#[derive(Default, Clone)]
+pub struct SetBonuses {
+    two_piece: HashMap<u16, (Stat, i32)>,
+}
+
+impl SetBonuses {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn set_two_piece(&mut self, set: u16, stat: Stat, value_fp: i32) {
+        self.two_piece.insert(set, (stat, value_fp));
+    }
+
+    pub fn two_piece_of(&self, set: u16) -> Option<(Stat, i32)> {
+        self.two_piece.get(&set).copied()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.two_piece.is_empty()
+    }
+
+    /// Max single 2pc value to each stat — used to bound the set-bonus contribution.
+    pub fn max_per_stat(&self) -> [i32; STAT_COUNT] {
+        let mut m = [0i32; STAT_COUNT];
+        for (stat, v) in self.two_piece.values() {
+            let i = stat.index();
+            if *v > m[i] {
+                m[i] = *v;
+            }
+        }
+        m
+    }
+}
+
+/// Apply active 2-piece bonuses (sets with >= 2 discs) onto an assembled total.
+pub fn apply_set_bonuses(
+    total: &mut [i32; STAT_COUNT],
+    set_counts: &HashMap<u16, u8>,
+    bonuses: &SetBonuses,
+) {
+    for (set, count) in set_counts {
+        if *count >= 2 {
+            if let Some((stat, v)) = bonuses.two_piece_of(*set) {
+                total[stat.index()] += v;
+            }
+        }
+    }
 }

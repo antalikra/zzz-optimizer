@@ -1,12 +1,18 @@
-//! Branch-and-bound search: dominance prune + monotonic upper bound + top-N heap.
-//! See docs/SOLVER.md. The reference brute force in `super::brute` exists so the
-//! property tests can assert this produces the same top-N scores.
+//! Branch-and-bound search: dominance prune + monotonic upper bound + top-N heap,
+//! with 2-piece set bonuses. See docs/SOLVER.md. The reference brute force in
+//! `super::brute` lets the property tests assert identical top-N scores.
 
 use std::cmp::Reverse;
-use std::collections::BinaryHeap;
+use std::collections::{BinaryHeap, HashMap};
 
-use super::model::{fp_from_f64, to_stats, BuildResult, Constraint, Disc, Objective};
+use super::model::{
+    apply_set_bonuses, fp_from_f64, to_stats, BuildResult, Constraint, Disc, Objective, SetBonuses,
+};
 use crate::domain::{Stat, STAT_COUNT};
+
+/// At most three distinct 2-piece bonuses can be active (2+2+2). Used to bound
+/// the set-bonus contribution per stat optimistically.
+const MAX_ACTIVE_2PC: i32 = 3;
 
 /// Heap entry ordered by score (NaN-safe via `total_cmp`).
 struct Scored {
@@ -30,8 +36,7 @@ impl Ord for Scored {
     }
 }
 
-/// Group discs into the six slots (index = slot - 1). Returns `None` if any slot
-/// has no candidate (then no complete build exists).
+/// Group discs into the six slots (index = slot - 1). `None` if any slot is empty.
 fn group_by_slot(discs: &[Disc]) -> Option<[Vec<Disc>; 6]> {
     let mut slots: [Vec<Disc>; 6] = Default::default();
     for d in discs {
@@ -45,10 +50,9 @@ fn group_by_slot(discs: &[Disc]) -> Option<[Vec<Disc>; 6]> {
     Some(slots)
 }
 
-/// Strict-Pareto dominance prune within one slot's candidates, over `dom_stats`
-/// (objective ∪ constraint stats). Drops a disc only if another is >= on every
-/// dom stat and strictly > on at least one — so equal discs are both kept and
-/// the top-N score multiset is preserved.
+/// Strict-Pareto dominance within one slot, over `dom_stats`, comparing only
+/// discs of the SAME set (set bonuses make cross-set discs incomparable —
+/// swapping one would change the build's set composition).
 fn prune_dominated(cands: &[Disc], dom_stats: &[Stat]) -> Vec<Disc> {
     let vecs: Vec<Vec<i32>> = cands
         .iter()
@@ -57,8 +61,8 @@ fn prune_dominated(cands: &[Disc], dom_stats: &[Stat]) -> Vec<Disc> {
 
     let mut keep = Vec::new();
     for (i, di) in cands.iter().enumerate() {
-        let dominated = cands.iter().enumerate().any(|(j, _)| {
-            if i == j {
+        let dominated = cands.iter().enumerate().any(|(j, dj)| {
+            if i == j || dj.set != di.set {
                 return false;
             }
             let ge_all = vecs[j].iter().zip(&vecs[i]).all(|(bj, bi)| bj >= bi);
@@ -76,14 +80,17 @@ struct Ctx<'a> {
     ordered: Vec<usize>,
     cands: [Vec<Disc>; 6],
     suffix: Vec<[i32; STAT_COUNT]>, // suffix[d] = sum of per-slot maxima for ordered slots d..end
+    ceiling: [i32; STAT_COUNT],     // optimistic max set-bonus contribution per stat
     objective: &'a Objective,
     constraints: &'a [Constraint],
+    bonuses: &'a SetBonuses,
     top_n: usize,
 }
 
 struct State {
     heap: BinaryHeap<Reverse<Scored>>,
     prefix: [i32; STAT_COUNT],
+    set_counts: HashMap<u16, u8>,
     chosen: Vec<u32>,
 }
 
@@ -105,8 +112,6 @@ impl State {
 }
 
 fn feasible_upper(b: &[i32; STAT_COUNT], constraints: &[Constraint]) -> bool {
-    // b holds the MAX achievable per stat for the subtree; if a min can't be
-    // reached even here, no completion satisfies it.
     constraints
         .iter()
         .all(|c| b[c.stat.index()] >= fp_from_f64(c.min))
@@ -114,33 +119,34 @@ fn feasible_upper(b: &[i32; STAT_COUNT], constraints: &[Constraint]) -> bool {
 
 fn dfs(ctx: &Ctx, st: &mut State, d: usize) {
     if d == ctx.ordered.len() {
-        // Leaf: prefix now holds the full build total.
+        // Leaf: assemble the full total including active set bonuses.
+        let mut total = st.prefix;
+        apply_set_bonuses(&mut total, &st.set_counts, ctx.bonuses);
         if !ctx
             .constraints
             .iter()
-            .all(|c| st.prefix[c.stat.index()] >= fp_from_f64(c.min))
+            .all(|c| total[c.stat.index()] >= fp_from_f64(c.min))
         {
             return;
         }
-        let score = (ctx.objective.score)(&to_stats(&st.prefix));
+        let score = (ctx.objective.score)(&to_stats(&total));
         let ids = st.chosen.clone();
         st.offer(ctx.top_n, score, ids);
         return;
     }
 
-    // Optimistic completion: prefix + max remaining per stat.
+    // Optimistic completion: prefix + max remaining per stat + max set-bonus ceiling.
     let mut b = st.prefix;
     for (i, bi) in b.iter_mut().enumerate() {
-        *bi += ctx.suffix[d][i];
+        *bi += ctx.suffix[d][i] + ctx.ceiling[i];
     }
     if !feasible_upper(&b, ctx.constraints) {
         return;
     }
     if st.heap.len() == ctx.top_n {
         if let Some(thr) = st.heap_min() {
-            let bound = (ctx.objective.score)(&to_stats(&b));
-            if bound <= thr {
-                return; // no completion can enter the top-N
+            if (ctx.objective.score)(&to_stats(&b)) <= thr {
+                return;
             }
         }
     }
@@ -148,37 +154,40 @@ fn dfs(ctx: &Ctx, st: &mut State, d: usize) {
     let slot = ctx.ordered[d];
     for cand in &ctx.cands[slot] {
         cand.apply(&mut st.prefix, 1);
+        *st.set_counts.entry(cand.set).or_insert(0) += 1;
         st.chosen.push(cand.id);
         dfs(ctx, st, d + 1);
         st.chosen.pop();
+        if let Some(c) = st.set_counts.get_mut(&cand.set) {
+            *c -= 1;
+        }
         cand.apply(&mut st.prefix, -1);
     }
 }
 
 /// Solve: return up to `top_n` best builds (sorted by score descending).
-///
-/// `base` is the fixed-point constant stat contribution (agent base + W-Engine +
-/// buffs); disc contributions are added on top. See docs/SOLVER.md for invariants.
 pub fn solve(
     discs: &[Disc],
     base: &[i32; STAT_COUNT],
     objective: &Objective,
     constraints: &[Constraint],
+    bonuses: &SetBonuses,
     top_n: usize,
 ) -> Vec<BuildResult> {
-    solve_with(discs, base, objective, constraints, top_n, true)
+    solve_with(discs, base, objective, constraints, bonuses, top_n, true)
 }
 
 /// Like [`solve`], but `use_dominance` can disable the dominance prune.
 ///
-/// Dominance preserves the optimum (top-1) but may drop strictly-worse builds
-/// that would occupy lower top-N ranks, so the full top-N score list only matches
-/// brute force when dominance is OFF. Both modes are exercised by the tests.
+/// Dominance preserves the optimum (top-1) but may drop strictly-worse builds at
+/// lower ranks, so the full top-N list only equals brute force with dominance OFF.
+#[allow(clippy::too_many_arguments)]
 pub fn solve_with(
     discs: &[Disc],
     base: &[i32; STAT_COUNT],
     objective: &Objective,
     constraints: &[Constraint],
+    bonuses: &SetBonuses,
     top_n: usize,
     use_dominance: bool,
 ) -> Vec<BuildResult> {
@@ -190,7 +199,6 @@ pub fn solve_with(
     };
 
     if use_dominance {
-        // Dominance prune each slot over objective ∪ constraint stats.
         let mut dom_stats = objective.relevant.clone();
         for c in constraints {
             if !dom_stats.contains(&c.stat) {
@@ -206,11 +214,7 @@ pub fn solve_with(
     let mut slot_max = [[0i32; STAT_COUNT]; 6];
     for (si, slot) in cands.iter().enumerate() {
         for stat in Stat::ALL {
-            let m = slot
-                .iter()
-                .map(|d| d.contribution(stat))
-                .max()
-                .unwrap_or(0);
+            let m = slot.iter().map(|d| d.contribution(stat)).max().unwrap_or(0);
             slot_max[si][stat.index()] = m;
         }
     }
@@ -229,17 +233,27 @@ pub fn solve_with(
         }
     }
 
+    // Optimistic set-bonus ceiling: up to MAX_ACTIVE_2PC copies of the best 2pc per stat.
+    let max2 = bonuses.max_per_stat();
+    let mut ceiling = [0i32; STAT_COUNT];
+    for i in 0..STAT_COUNT {
+        ceiling[i] = MAX_ACTIVE_2PC * max2[i];
+    }
+
     let ctx = Ctx {
         ordered,
         cands,
         suffix,
+        ceiling,
         objective,
         constraints,
+        bonuses,
         top_n,
     };
     let mut st = State {
         heap: BinaryHeap::new(),
         prefix: *base,
+        set_counts: HashMap::new(),
         chosen: Vec::with_capacity(6),
     };
     dfs(&ctx, &mut st, 0);

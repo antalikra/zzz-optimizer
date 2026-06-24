@@ -1,34 +1,50 @@
-//! Reference brute force — exhaustive enumeration with no pruning. Exists so the
-//! tests can assert the branch-and-bound search returns the same top-N scores.
+//! Reference brute force — exhaustive enumeration with no pruning, including set
+//! bonuses. Exists so the tests can assert the B&B search returns the same top-N.
 
-use super::model::{fp_from_f64, to_stats, BuildResult, Constraint, Disc, Objective};
+use std::collections::HashMap;
+
+use super::model::{
+    apply_set_bonuses, fp_from_f64, to_stats, BuildResult, Constraint, Disc, Objective, SetBonuses,
+};
 use crate::domain::STAT_COUNT;
 
-#[allow(clippy::too_many_arguments)]
+struct Rec<'a> {
+    slots: &'a [Vec<&'a Disc>; 6],
+    objective: &'a Objective,
+    constraints: &'a [Constraint],
+    bonuses: &'a SetBonuses,
+    out: &'a mut Vec<BuildResult>,
+}
+
 fn rec(
-    slots: &[Vec<&Disc>; 6],
+    r: &mut Rec,
     d: usize,
     prefix: &mut [i32; STAT_COUNT],
+    set_counts: &mut HashMap<u16, u8>,
     ids: &mut Vec<u32>,
-    objective: &Objective,
-    constraints: &[Constraint],
-    out: &mut Vec<BuildResult>,
 ) {
     if d == 6 {
-        if constraints
+        let mut total = *prefix;
+        apply_set_bonuses(&mut total, set_counts, r.bonuses);
+        if r
+            .constraints
             .iter()
-            .all(|c| prefix[c.stat.index()] >= fp_from_f64(c.min))
+            .all(|c| total[c.stat.index()] >= fp_from_f64(c.min))
         {
-            let score = (objective.score)(&to_stats(prefix));
-            out.push(BuildResult { disc_ids: ids.clone(), score });
+            let score = (r.objective.score)(&to_stats(&total));
+            r.out.push(BuildResult { disc_ids: ids.clone(), score });
         }
         return;
     }
-    for cand in &slots[d] {
+    for cand in &r.slots[d] {
         cand.apply(prefix, 1);
+        *set_counts.entry(cand.set).or_insert(0) += 1;
         ids.push(cand.id);
-        rec(slots, d + 1, prefix, ids, objective, constraints, out);
+        rec(r, d + 1, prefix, set_counts, ids);
         ids.pop();
+        if let Some(c) = set_counts.get_mut(&cand.set) {
+            *c -= 1;
+        }
         cand.apply(prefix, -1);
     }
 }
@@ -39,6 +55,7 @@ pub fn brute_force(
     base: &[i32; STAT_COUNT],
     objective: &Objective,
     constraints: &[Constraint],
+    bonuses: &SetBonuses,
     top_n: usize,
 ) -> Vec<BuildResult> {
     if top_n == 0 {
@@ -56,8 +73,12 @@ pub fn brute_force(
 
     let mut all = Vec::new();
     let mut prefix = *base;
+    let mut set_counts = HashMap::new();
     let mut ids = Vec::with_capacity(6);
-    rec(&slots, 0, &mut prefix, &mut ids, objective, constraints, &mut all);
+    {
+        let mut r = Rec { slots: &slots, objective, constraints, bonuses, out: &mut all };
+        rec(&mut r, 0, &mut prefix, &mut set_counts, &mut ids);
+    }
 
     all.sort_by(|a, b| b.score.total_cmp(&a.score));
     all.truncate(top_n);
