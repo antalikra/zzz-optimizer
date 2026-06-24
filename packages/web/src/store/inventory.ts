@@ -7,6 +7,7 @@ interface InventoryState {
   nextId: number;
   hydrate: () => Promise<void>;
   add: (d: NewDisc) => void;
+  addMany: (ds: NewDisc[]) => void;
   remove: (id: number) => void;
   clear: () => void;
   replaceAll: (discs: Disc[]) => void;
@@ -25,6 +26,14 @@ export const useInventory = create<InventoryState>((set, get) => {
     add: (d) => {
       const id = get().nextId;
       set((s) => ({ discs: [...s.discs, { ...d, id }], nextId: s.nextId + 1 }));
+      persist();
+    },
+    addMany: (ds) => {
+      set((s) => {
+        let id = s.nextId;
+        const added = ds.map((d) => ({ ...d, id: id++ }));
+        return { discs: [...s.discs, ...added], nextId: id };
+      });
       persist();
     },
     remove: (id) => {

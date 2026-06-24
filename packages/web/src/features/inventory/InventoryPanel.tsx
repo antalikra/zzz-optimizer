@@ -1,8 +1,10 @@
 import { useInventory } from "../../store/inventory";
+import { generateTestDiscs } from "../../domain/testdata";
 import { DiscForm } from "./DiscForm";
 
 export function InventoryPanel() {
   const discs = useInventory((s) => s.discs);
+  const addMany = useInventory((s) => s.addMany);
   const remove = useInventory((s) => s.remove);
   const clear = useInventory((s) => s.clear);
 
@@ -13,9 +15,14 @@ export function InventoryPanel() {
       <div className="card">
         <div className="row row--between" style={{ marginBottom: 16 }}>
           <h3 className="card__title" style={{ margin: 0 }}>Inventory · {discs.length}</h3>
-          {discs.length > 0 && (
-            <button className="btn btn--ghost btn--sm" onClick={() => clear()}>Clear all</button>
-          )}
+          <div className="row" style={{ gap: 8 }}>
+            <button className="btn btn--outline btn--sm" onClick={() => addMany(generateTestDiscs(3))}>
+              Generate test discs
+            </button>
+            {discs.length > 0 && (
+              <button className="btn btn--ghost btn--sm" onClick={() => clear()}>Clear all</button>
+            )}
+          </div>
         </div>
 
         {discs.length === 0 ? (
