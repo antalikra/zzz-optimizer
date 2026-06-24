@@ -3,9 +3,18 @@ import { useInventory } from "../store/inventory";
 import { requestPersist } from "../services/storage";
 import { InventoryPanel } from "../features/inventory/InventoryPanel";
 import { OptimizerPanel } from "../features/optimizer/OptimizerPanel";
+import { DatabasePanel } from "../features/database/DatabasePanel";
+
+type Tab = "inventory" | "optimize" | "database";
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: "inventory", label: "Inventory" },
+  { id: "optimize", label: "Optimize" },
+  { id: "database", label: "Database" },
+];
 
 export function App() {
-  const [tab, setTab] = useState<"inventory" | "optimize">("inventory");
+  const [tab, setTab] = useState<Tab>("inventory");
 
   useEffect(() => {
     void useInventory.getState().hydrate();
@@ -16,14 +25,19 @@ export function App() {
     <main style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
       <h1>ZZZ Optimizer</h1>
       <div className="tabs" style={{ marginBottom: 16 }}>
-        <button className={tab === "inventory" ? "tab-active" : ""} onClick={() => setTab("inventory")}>
-          Inventory
-        </button>
-        <button className={tab === "optimize" ? "tab-active" : ""} onClick={() => setTab("optimize")}>
-          Optimize
-        </button>
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            className={tab === t.id ? "tab-active" : ""}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
-      {tab === "inventory" ? <InventoryPanel /> : <OptimizerPanel />}
+      {tab === "inventory" && <InventoryPanel />}
+      {tab === "optimize" && <OptimizerPanel />}
+      {tab === "database" && <DatabasePanel />}
     </main>
   );
 }

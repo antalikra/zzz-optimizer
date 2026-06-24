@@ -9,6 +9,7 @@ interface InventoryState {
   add: (d: NewDisc) => void;
   remove: (id: number) => void;
   clear: () => void;
+  replaceAll: (discs: Disc[]) => void;
 }
 
 export const useInventory = create<InventoryState>((set, get) => {
@@ -32,6 +33,11 @@ export const useInventory = create<InventoryState>((set, get) => {
     },
     clear: () => {
       set({ discs: [] });
+      persist();
+    },
+    replaceAll: (discs) => {
+      const nextId = discs.reduce((m, d) => Math.max(m, d.id), 0) + 1;
+      set({ discs, nextId });
       persist();
     },
   };
