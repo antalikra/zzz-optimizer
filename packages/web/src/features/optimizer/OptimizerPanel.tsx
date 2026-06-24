@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useInventory } from "../../store/inventory";
 import { useSolver } from "./useSolver";
-import { toSolverValue, type Stat } from "../../domain/stats";
+import { SET_2PC, SETS, setIndex, toSolverValue, type Stat } from "../../domain/stats";
 import type { Disc } from "../../domain/inventory";
 import type { DiscDto, ObjectiveDto, SolveRequest, SolveResponse } from "../../domain/solver";
 
@@ -10,11 +10,21 @@ const WEIGHT_STATS: Stat[] = ["CritRate", "CritDmg", "AtkPct", "Atk", "IceDmg"];
 function toDto(d: Disc): DiscDto {
   return {
     id: d.id,
-    set: 0, // set bonuses not yet scored by the solver
+    set: setIndex(d.set),
     slot: d.slot,
     main: { stat: d.mainStat, value: toSolverValue(d.mainStat, d.mainValue) },
     subs: d.subs.map((s) => ({ stat: s.stat, value: toSolverValue(s.stat, s.value) })),
   };
+}
+
+/** 2-piece bonus table for the solver, keyed by set id (string), in solver units. */
+function buildSetBonuses(): Record<string, { stat: string; value: number }> {
+  const out: Record<string, { stat: string; value: number }> = {};
+  SETS.forEach((name, idx) => {
+    const b = SET_2PC[name];
+    if (b) out[String(idx)] = { stat: b.stat, value: toSolverValue(b.stat, b.value) };
+  });
+  return out;
 }
 
 export function OptimizerPanel() {
@@ -40,7 +50,14 @@ export function OptimizerPanel() {
     setResp(null);
     const objective: ObjectiveDto =
       kind === "weighted" ? { kind: "weighted", weights } : { kind: "maxStat", stat: maxStat };
-    const req: SolveRequest = { objective, base: {}, discs: discs.map(toDto), constraints: [], topN };
+    const req: SolveRequest = {
+      objective,
+      base: {},
+      discs: discs.map(toDto),
+      constraints: [],
+      setBonuses: buildSetBonuses(),
+      topN,
+    };
     try {
       setResp(await solve(req));
     } catch (e) {

@@ -29,6 +29,8 @@ export interface SolveRequest {
   base?: Record<string, number>;
   discs: DiscDto[];
   constraints?: { stat: string; min: number }[];
+  /** set id (as string) -> 2-piece bonus, in solver units. */
+  setBonuses?: Record<string, { stat: string; value: number }>;
   topN: number;
 }
 

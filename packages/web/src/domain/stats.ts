@@ -31,8 +31,29 @@ export const SUBSTATS: Stat[] = [
 /** UI value (percent for % stats) -> solver units (fraction for %). */
 export const toSolverValue = (s: Stat, v: number): number => (isPercent(s) ? v / 100 : v);
 
-/** Common Drive Disc sets (display only; set bonuses not yet scored). */
+/** Common Drive Disc sets. */
 export const SETS = [
   "Polar Metal", "Woodpecker Electro", "Hormone Punk", "Fanged Metal", "Puffer Electro",
   "Shockstar Disco", "Swing Jazz", "Chaos Jazz", "Inferno Metal", "Thunder Metal", "Freedom Blues",
 ];
+
+/** Approximate 2-piece set bonuses (DRAFT values; mirrors game-data, verify later). */
+export const SET_2PC: Record<string, { stat: Stat; value: number }> = {
+  "Polar Metal": { stat: "IceDmg", value: 10 },
+  "Woodpecker Electro": { stat: "CritRate", value: 8 },
+  "Hormone Punk": { stat: "AtkPct", value: 10 },
+  "Fanged Metal": { stat: "PhysicalDmg", value: 10 },
+  "Puffer Electro": { stat: "PenRatio", value: 8 },
+  "Shockstar Disco": { stat: "Impact", value: 6 },
+  "Swing Jazz": { stat: "EnergyRegen", value: 20 },
+  "Chaos Jazz": { stat: "AnomalyProficiency", value: 30 },
+  "Inferno Metal": { stat: "FireDmg", value: 10 },
+  "Thunder Metal": { stat: "ElectricDmg", value: 10 },
+  "Freedom Blues": { stat: "AnomalyProficiency", value: 30 },
+};
+
+/** Stable numeric id for a set name (index in SETS), for the solver request. */
+export const setIndex = (name: string): number => {
+  const i = SETS.indexOf(name);
+  return i < 0 ? 0 : i;
+};
