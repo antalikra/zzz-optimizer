@@ -8,6 +8,7 @@ build/
 target/
 pkg/
 *.wasm
+packages/web/src/wasm/
 
 # Logs
 *.log

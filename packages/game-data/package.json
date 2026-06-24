@@ -1,0 +1,7 @@
+{
+  "name": "@zzz/game-data",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Static ZZZ game data (versioned per patch) + JSON schemas"
+}
