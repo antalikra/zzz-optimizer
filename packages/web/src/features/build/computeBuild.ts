@@ -2,7 +2,7 @@
 // display only). Percentages are accumulated as fractions, flats raw.
 import type { Disc } from "../../domain/inventory";
 import { SET_2PC, isPercent, type Stat } from "../../domain/stats";
-import { agentById } from "../../domain/agents";
+import { agentById, effectiveBaseAtk } from "../../domain/agents";
 
 export interface BuildStats {
   atk: number;
@@ -13,7 +13,12 @@ export interface BuildStats {
   pen: number;
 }
 
-export function computeBuildStats(agentId: string, wEngineAtk: number, discs: Disc[]): BuildStats {
+export function computeBuildStats(
+  agentId: string,
+  level: number,
+  wEngineAtk: number,
+  discs: Disc[],
+): BuildStats {
   const agent = agentById(agentId);
   const acc: Partial<Record<Stat, number>> = {};
   const add = (s: Stat, v: number) => {
@@ -40,7 +45,7 @@ export function computeBuildStats(agentId: string, wEngineAtk: number, discs: Di
   const atkPct = acc.AtkPct ?? 0;
   const flatAtk = acc.Atk ?? 0;
   return {
-    atk: (agent.baseAtk + wEngineAtk) * (1 + atkPct) + flatAtk,
+    atk: (effectiveBaseAtk(agent, level) + wEngineAtk) * (1 + atkPct) + flatAtk,
     critRate: acc.CritRate ?? 0,
     critDmg: acc.CritDmg ?? 0,
     atkPct,

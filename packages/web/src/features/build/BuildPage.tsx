@@ -2,13 +2,19 @@ import { useEffect, useMemo, useState } from "react";
 import { useTeam, DEFAULT_AGENT_LEVEL } from "../../store/team";
 import { useInventory } from "../../store/inventory";
 import { useSolver } from "../optimizer/useSolver";
-import { agentById, ELEMENT_COLOR } from "../../domain/agents";
+import { agentById, effectiveBaseAtk, ELEMENT_COLOR } from "../../domain/agents";
 import { buildSetBonuses, discToDto, slotsCovered } from "../../domain/solverRequest";
+import { generateTestDiscs } from "../../domain/testdata";
 import { computeBuildStats, type BuildStats } from "./computeBuild";
 import { AgentAvatar } from "./AgentAvatar";
 import { TeamBar } from "./TeamBar";
 import type { Disc } from "../../domain/inventory";
 import type { SolveRequest } from "../../domain/solver";
+
+// Fixed calc context for now (W-Engine equip + target settings come later).
+const WENGINE_ATK = 684;
+const ENEMY_DEF = 600;
+const RES_MULT = 1.0;
 
 interface Result {
   damage: number;
@@ -25,16 +31,14 @@ export function BuildPage() {
   const levels = useTeam((s) => s.levels);
   const setLevel = useTeam((s) => s.setLevel);
   const discs = useInventory((s) => s.discs);
+  const addMany = useInventory((s) => s.addMany);
   const { solve } = useSolver();
 
   const activeId = slots[active];
   const agent = activeId ? agentById(activeId) : null;
   const level = activeId ? levels[activeId] ?? DEFAULT_AGENT_LEVEL : DEFAULT_AGENT_LEVEL;
 
-  const [rotationId, setRotationId] = useState<string>("");
-  const [wEngineAtk, setWEngineAtk] = useState(684);
-  const [enemyDef, setEnemyDef] = useState(600);
-  const [resMult, setResMult] = useState(1.0);
+  const [rotationId, setRotationId] = useState("");
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -62,9 +66,9 @@ export function BuildPage() {
     const req: SolveRequest = {
       objective: {
         kind: "ellenDamage",
-        baseAtk: agent.baseAtk + wEngineAtk,
+        baseAtk: effectiveBaseAtk(agent, level) + WENGINE_ATK,
         skillMv: rotation.totalMv,
-        enemy: { def: enemyDef, levelFactor: 800, resMult },
+        enemy: { def: ENEMY_DEF, levelFactor: 800, resMult: RES_MULT },
       },
       base: { CritRate: agent.baseCritRate / 100, CritDmg: agent.baseCritDmg / 100 },
       discs: discs.map(discToDto),
@@ -76,13 +80,11 @@ export function BuildPage() {
       const resp = await solve(req);
       if (resp.status === "ok" && resp.builds[0]) {
         const best = resp.builds[0];
-        const bDiscs = best.discIds
-          .map((id) => byId.get(id))
-          .filter((x): x is Disc => Boolean(x));
+        const bDiscs = best.discIds.map((id) => byId.get(id)).filter((x): x is Disc => Boolean(x));
         setResult({
           damage: best.score,
           dps: best.score / rotation.durationSec,
-          stats: computeBuildStats(agent.id, wEngineAtk, bDiscs),
+          stats: computeBuildStats(agent.id, level, WENGINE_ATK, bDiscs),
           discs: bDiscs,
         });
       } else {
@@ -125,12 +127,12 @@ export function BuildPage() {
 
           {!agent.damageFormula ? (
             <p className="muted" style={{ marginTop: 18 }}>
-              {agent.role} agent. We don't optimize support/stun builds yet — for now only the team's
+              {agent.role} agent. We don't optimize support / stun builds yet — for now only the team's
               Attack core is build-optimized. Passive-condition toggles for this role are coming.
             </p>
           ) : (
             <>
-              <div className="row" style={{ marginTop: 18 }}>
+              <div className="row" style={{ marginTop: 18, alignItems: "flex-end" }}>
                 <label className="field">
                   <span className="field__label">Rotation</span>
                   <select className="select w-md" value={rotationId} onChange={(e) => setRotationId(e.target.value)}>
@@ -139,31 +141,19 @@ export function BuildPage() {
                     ))}
                   </select>
                 </label>
-                <label className="field">
-                  <span className="field__label">W-Engine ATK</span>
-                  <input className="input w-sm" type="number" value={wEngineAtk}
-                    onChange={(e) => setWEngineAtk(Number(e.target.value))} />
-                </label>
-                <label className="field">
-                  <span className="field__label">Enemy DEF</span>
-                  <input className="input w-sm" type="number" value={enemyDef}
-                    onChange={(e) => setEnemyDef(Number(e.target.value))} />
-                </label>
-                <label className="field">
-                  <span className="field__label">RES mult</span>
-                  <input className="input w-xs" type="number" step="0.05" value={resMult}
-                    onChange={(e) => setResMult(Number(e.target.value))} />
-                </label>
-              </div>
-
-              <div className="row" style={{ marginTop: 18, alignItems: "center" }}>
                 <button className="btn btn--primary" onClick={calc} disabled={running || !ready}>
                   {running ? "Calculating…" : "Calculate damage"}
                 </button>
-                {!ready && (
-                  <span className="error-text">Add ≥1 disc to every slot 1–6 (Inventory → Generate test discs).</span>
-                )}
               </div>
+
+              {!ready && (
+                <div className="row" style={{ marginTop: 12, alignItems: "center" }}>
+                  <span className="muted">Need ≥1 disc in every slot 1–6.</span>
+                  <button className="btn btn--outline btn--sm" onClick={() => addMany(generateTestDiscs(3))}>
+                    Generate test discs
+                  </button>
+                </div>
+              )}
 
               {err && <p className="error-text" style={{ marginTop: 12 }}>Error: {err}</p>}
 
