@@ -26,4 +26,5 @@ jobs:
           node-version: 20
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
+      - run: pnpm validate:data
       - run: pnpm --filter @zzz/web build
