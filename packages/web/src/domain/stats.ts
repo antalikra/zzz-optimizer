@@ -1,6 +1,7 @@
 // Stat metadata for the UI. Mirrors game-data/stat-tables; will be loaded from
 // game-data later. UI stores percentages in PERCENT units (user types "24" for
 // 24%); conversion to solver fractions happens via `toSolverValue`.
+import { DISC_SETS } from "./sets";
 
 export const ALL_STATS = [
   "Hp", "HpPct", "Atk", "AtkPct", "Def", "DefPct", "CritRate", "CritDmg", "Pen", "PenRatio",
@@ -31,11 +32,8 @@ export const SUBSTATS: Stat[] = [
 /** UI value (percent for % stats) -> solver units (fraction for %). */
 export const toSolverValue = (s: Stat, v: number): number => (isPercent(s) ? v / 100 : v);
 
-/** Common Drive Disc sets. */
-export const SETS = [
-  "Polar Metal", "Woodpecker Electro", "Hormone Punk", "Fanged Metal", "Puffer Electro",
-  "Shockstar Disco", "Swing Jazz", "Chaos Jazz", "Inferno Metal", "Thunder Metal", "Freedom Blues",
-];
+/** Drive Disc set names (from the real set catalog). */
+export const SETS: string[] = DISC_SETS.map((s) => s.name);
 
 /** Approximate 2-piece set bonuses (DRAFT values; mirrors game-data, verify later). */
 export const SET_2PC: Record<string, { stat: Stat; value: number }> = {

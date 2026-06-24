@@ -1,0 +1,33 @@
+// AUTO-GENERATED from Enka equipments.json (disc sets). Icons in public/sets/{id}.png.
+export interface GeneratedSet { id: string; name: string; }
+export const GENERATED_SETS: GeneratedSet[] = [
+  { id: "31000", name: "Woodpecker Electro" },
+  { id: "31100", name: "Puffer Electro" },
+  { id: "31200", name: "Shockstar Disco" },
+  { id: "31300", name: "Freedom Blues" },
+  { id: "31400", name: "Hormone Punk" },
+  { id: "31500", name: "Soul Rock" },
+  { id: "31600", name: "Swing Jazz" },
+  { id: "31800", name: "Chaos Jazz" },
+  { id: "31900", name: "Proto Punk" },
+  { id: "32200", name: "Inferno Metal" },
+  { id: "32300", name: "Chaos Metal" },
+  { id: "32400", name: "Thunder Metal" },
+  { id: "32500", name: "Polar Metal" },
+  { id: "32600", name: "Fanged Metal" },
+  { id: "32700", name: "Branch&Blade Song" },
+  { id: "32800", name: "Astral Voice" },
+  { id: "32900", name: "Shadow" },
+  { id: "33000", name: "Savior" },
+  { id: "33100", name: "Yunkui Tales" },
+  { id: "33200", name: "Kingofthe Summit" },
+  { id: "33300", name: "Dawns Bloom" },
+  { id: "33400", name: "Moonlight Lullaby" },
+  { id: "33500", name: "White Water Ballad" },
+  { id: "33600", name: "Shining Aria" },
+  { id: "33700", name: "Bunnyin Wonderland" },
+  { id: "33800", name: "Notes Fromthe Chained" },
+  { id: "33900", name: "Wuthering Salon" },
+  { id: "34000", name: "The Sky Ablaze" },
+];
+

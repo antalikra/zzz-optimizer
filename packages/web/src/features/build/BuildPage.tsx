@@ -5,6 +5,7 @@ import { useSolver } from "../optimizer/useSolver";
 import { agentById, effectiveBaseAtk, scaleByLevel } from "../../domain/agents";
 import { buildSetBonuses, discToDto, slotsCovered } from "../../domain/solverRequest";
 import { generateTestDiscs } from "../../domain/testdata";
+import { setIcon } from "../../domain/sets";
 import { computeBuildStats, type BuildStats } from "./computeBuild";
 import { AgentAvatar } from "./AgentAvatar";
 import { TeamBar } from "./TeamBar";
@@ -192,16 +193,22 @@ export function BuildPage() {
 
                   <h4 className="section-h" style={{ marginTop: 18 }}>Best discs</h4>
                   <div className="disc-row">
-                    {result.discs.map((d) => (
-                      <div className="disc-tile" key={d.id}>
-                        <div className="disc-tile__slot">Slot {d.slot}</div>
-                        <div className="disc-tile__main">{d.mainStat} {d.mainValue}</div>
-                        <div className="disc-tile__set">{d.set}</div>
-                        <div className="disc-tile__subs">
-                          {d.subs.map((s) => `${s.stat} ${s.value}`).join("\n") || "—"}
+                    {result.discs.map((d) => {
+                      const ic = setIcon(d.set);
+                      return (
+                        <div className="disc-tile" key={d.id}>
+                          <div className="disc-tile__slot">Slot {d.slot}</div>
+                          <div className="disc-tile__main">{d.mainStat} {d.mainValue}</div>
+                          <div className="disc-tile__set">
+                            {ic && <img src={ic} alt="" />}
+                            {d.set}
+                          </div>
+                          <div className="disc-tile__subs">
+                            {d.subs.map((s) => `${s.stat} ${s.value}`).join("\n") || "—"}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
