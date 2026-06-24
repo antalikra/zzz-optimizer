@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTeam, DEFAULT_AGENT_LEVEL } from "../../store/team";
 import { useInventory } from "../../store/inventory";
 import { useSolver } from "../optimizer/useSolver";
-import { agentById, effectiveBaseAtk, ELEMENT_COLOR } from "../../domain/agents";
+import { agentById, effectiveBaseAtk, scaleByLevel } from "../../domain/agents";
 import { buildSetBonuses, discToDto, slotsCovered } from "../../domain/solverRequest";
 import { generateTestDiscs } from "../../domain/testdata";
 import { computeBuildStats, type BuildStats } from "./computeBuild";
@@ -11,7 +11,6 @@ import { TeamBar } from "./TeamBar";
 import type { Disc } from "../../domain/inventory";
 import type { SolveRequest } from "../../domain/solver";
 
-// Fixed calc context for now (W-Engine equip + target settings come later).
 const WENGINE_ATK = 684;
 const ENEMY_DEF = 600;
 const RES_MULT = 1.0;
@@ -24,6 +23,7 @@ interface Result {
 }
 
 const pct = (f: number) => `${(f * 100).toFixed(1)}%`;
+const fmt = (n: number) => n.toLocaleString("en-US");
 
 export function BuildPage() {
   const slots = useTeam((s) => s.slots);
@@ -58,7 +58,7 @@ export function BuildPage() {
     setLevel(agent.id, Math.max(1, Math.min(60, level + delta)));
   }
 
-  async function calc() {
+  async function optimize() {
     if (!agent?.damageFormula || !rotation) return;
     setRunning(true);
     setErr(null);
@@ -108,12 +108,15 @@ export function BuildPage() {
 
       {agent && (
         <div className="card">
+          {/* Header */}
           <div className="agent-head">
-            <AgentAvatar agent={agent} size={76} />
-            <div>
+            <span className="agent-head__ring" style={{ borderColor: agent.accent }}>
+              <AgentAvatar agent={agent} size={72} />
+            </span>
+            <div style={{ flex: 1 }}>
               <h2 className="agent-head__name">{agent.name}</h2>
               <div className="agent-head__meta">
-                <span style={{ color: ELEMENT_COLOR[agent.element] }}>{agent.element}</span>
+                <span style={{ color: agent.accent, fontWeight: 600 }}>{agent.element}</span>
                 {" · "}
                 <span className="badge">{agent.role}</span>
               </div>
@@ -125,14 +128,29 @@ export function BuildPage() {
             </div>
           </div>
 
+          {/* Base stats — read-only, derived from level */}
+          <h4 className="section-h">Base stats <span className="muted">(from level, not editable)</span></h4>
+          <div className="stat-grid">
+            <StatCell k="HP" v={fmt(scaleByLevel(agent.baseHp, level))} />
+            <StatCell k="ATK" v={fmt(scaleByLevel(agent.baseAtk, level))} />
+            <StatCell k="DEF" v={fmt(scaleByLevel(agent.baseDef, level))} />
+            <StatCell k="CRIT Rate" v={`${agent.baseCritRate}%`} />
+            <StatCell k="CRIT DMG" v={`${agent.baseCritDmg}%`} />
+            <StatCell k="Impact" v={fmt(agent.impact)} />
+            <StatCell k="Anomaly Mastery" v={fmt(agent.anomalyMastery)} />
+            <StatCell k="Anomaly Proficiency" v={fmt(agent.anomalyProficiency)} />
+          </div>
+
+          {/* Damage optimization (Attack core only) */}
           {!agent.damageFormula ? (
-            <p className="muted" style={{ marginTop: 18 }}>
-              {agent.role} agent. We don't optimize support / stun builds yet — for now only the team's
-              Attack core is build-optimized. Passive-condition toggles for this role are coming.
+            <p className="muted" style={{ marginTop: 20 }}>
+              {agent.role} agent — supports aren't build-optimized yet. Only the team's Attack core gets
+              its discs optimized; passive-condition toggles for this role are coming.
             </p>
           ) : (
             <>
-              <div className="row" style={{ marginTop: 18, alignItems: "flex-end" }}>
+              <h4 className="section-h" style={{ marginTop: 22 }}>Optimize discs for damage</h4>
+              <div className="row" style={{ alignItems: "flex-end" }}>
                 <label className="field">
                   <span className="field__label">Rotation</span>
                   <select className="select w-md" value={rotationId} onChange={(e) => setRotationId(e.target.value)}>
@@ -141,39 +159,38 @@ export function BuildPage() {
                     ))}
                   </select>
                 </label>
-                <button className="btn btn--primary" onClick={calc} disabled={running || !ready}>
-                  {running ? "Calculating…" : "Calculate damage"}
-                </button>
-              </div>
-
-              {!ready && (
-                <div className="row" style={{ marginTop: 12, alignItems: "center" }}>
-                  <span className="muted">Need ≥1 disc in every slot 1–6.</span>
-                  <button className="btn btn--outline btn--sm" onClick={() => addMany(generateTestDiscs(3))}>
-                    Generate test discs
+                {ready ? (
+                  <button className="btn btn--primary" onClick={optimize} disabled={running}>
+                    {running ? "Optimizing…" : "Optimize discs"}
                   </button>
-                </div>
-              )}
+                ) : (
+                  <button className="btn btn--outline" onClick={() => addMany(generateTestDiscs(3))}>
+                    Generate test discs first
+                  </button>
+                )}
+              </div>
+              {!ready && <p className="muted" style={{ marginTop: 8 }}>Inventory needs ≥1 disc in every slot 1–6.</p>}
 
               {err && <p className="error-text" style={{ marginTop: 12 }}>Error: {err}</p>}
 
               {result && (
                 <div style={{ marginTop: 22 }}>
                   <div className="dps">
-                    <span className="dps__val">{result.dps.toFixed(0)}</span>
-                    <span className="dps__unit">DPS · {result.damage.toFixed(0)} per rotation</span>
+                    <span className="dps__val">{fmt(Math.round(result.dps))}</span>
+                    <span className="dps__unit">DPS · {fmt(Math.round(result.damage))} per rotation</span>
                   </div>
 
-                  <div className="stat-grid" style={{ marginTop: 16 }}>
-                    <StatCell k="ATK" v={result.stats.atk.toFixed(0)} />
-                    <StatCell k="CRIT Rate" v={pct(result.stats.critRate)} />
-                    <StatCell k="CRIT DMG" v={pct(result.stats.critDmg)} />
+                  <h4 className="section-h" style={{ marginTop: 18 }}>Final stats (with optimized discs)</h4>
+                  <div className="stat-grid">
+                    <StatCell k="ATK" v={fmt(Math.round(result.stats.atk))} hot />
+                    <StatCell k="CRIT Rate" v={pct(result.stats.critRate)} hot />
+                    <StatCell k="CRIT DMG" v={pct(result.stats.critDmg)} hot />
                     <StatCell k="ATK%" v={pct(result.stats.atkPct)} />
                     <StatCell k="Ice DMG" v={pct(result.stats.iceDmg)} />
-                    <StatCell k="PEN" v={result.stats.pen.toFixed(0)} />
+                    <StatCell k="PEN" v={fmt(Math.round(result.stats.pen))} />
                   </div>
 
-                  <h4 style={{ margin: "20px 0 10px", fontWeight: 600 }}>Best discs</h4>
+                  <h4 className="section-h" style={{ marginTop: 18 }}>Best discs</h4>
                   <div className="disc-row">
                     {result.discs.map((d) => (
                       <div className="disc-tile" key={d.id}>
@@ -196,11 +213,11 @@ export function BuildPage() {
   );
 }
 
-function StatCell({ k, v }: { k: string; v: string }) {
+function StatCell({ k, v, hot }: { k: string; v: string; hot?: boolean }) {
   return (
     <div className="stat-cell">
       <span className="stat-cell__k">{k}</span>
-      <span className="stat-cell__v">{v}</span>
+      <span className="stat-cell__v" style={hot ? { color: "var(--accent)" } : undefined}>{v}</span>
     </div>
   );
 }

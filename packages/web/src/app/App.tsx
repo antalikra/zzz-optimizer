@@ -3,14 +3,12 @@ import { useInventory } from "../store/inventory";
 import { requestPersist } from "../services/storage";
 import { BuildPage } from "../features/build/BuildPage";
 import { InventoryPanel } from "../features/inventory/InventoryPanel";
-import { OptimizerPanel } from "../features/optimizer/OptimizerPanel";
 import { DatabasePanel } from "../features/database/DatabasePanel";
 
-type Tab = "build" | "optimize" | "inventory" | "database";
+type Tab = "build" | "inventory" | "database";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "build", label: "Build" },
-  { id: "optimize", label: "Optimize" },
   { id: "inventory", label: "Inventory" },
   { id: "database", label: "Database" },
 ];
@@ -44,7 +42,6 @@ export function App() {
       </header>
 
       {tab === "build" && <BuildPage />}
-      {tab === "optimize" && <OptimizerPanel />}
       {tab === "inventory" && <InventoryPanel />}
       {tab === "database" && <DatabasePanel />}
     </div>

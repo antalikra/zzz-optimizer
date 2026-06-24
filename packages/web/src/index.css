@@ -256,8 +256,16 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 
 /* ---- Agent header ---------------------------------------------------------- */
 .agent-head { display: flex; align-items: center; gap: 16px; }
+.agent-head__ring { display: inline-flex; padding: 3px; border: 2px solid var(--accent); border-radius: 50%; }
 .agent-head__name { font-size: var(--fs-h1); font-weight: var(--fw-bold); letter-spacing: var(--ls-tight); margin: 0; }
-.agent-head__meta { color: var(--text-secondary); font-size: var(--fs-sm); margin-top: 2px; }
+.agent-head__meta { color: var(--text-secondary); font-size: var(--fs-sm); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+
+/* ---- Section heading ------------------------------------------------------- */
+.section-h {
+  font-size: var(--fs-xs); font-weight: 600; color: var(--text-secondary);
+  margin: 18px 0 10px; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.section-h .muted { text-transform: none; letter-spacing: 0; font-weight: 400; }
 
 /* ---- Stat grid ------------------------------------------------------------- */
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
