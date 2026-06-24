@@ -22,22 +22,28 @@ export function App() {
   }, []);
 
   return (
-    <main style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
-      <h1>ZZZ Optimizer</h1>
-      <div className="tabs" style={{ marginBottom: 16 }}>
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            className={tab === t.id ? "tab-active" : ""}
-            onClick={() => setTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+    <div className="app-shell">
+      <header className="app-header">
+        <h1 className="app-title">
+          <span className="logo-dot" />
+          ZZZ Optimizer
+        </h1>
+        <nav className="tabs-pill">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              className={`tab-pill ${tab === t.id ? "is-active" : ""}`}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
+      </header>
+
       {tab === "inventory" && <InventoryPanel />}
       {tab === "optimize" && <OptimizerPanel />}
       {tab === "database" && <DatabasePanel />}
-    </main>
+    </div>
   );
 }

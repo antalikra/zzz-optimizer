@@ -33,13 +33,14 @@ export function DatabasePanel() {
   }
 
   return (
-    <section>
-      <h3>Database</h3>
+    <div className="card">
+      <h3 className="card__title">Database</h3>
+
       <div className="row">
-        <button onClick={download} disabled={discs.length === 0}>
-          Export ({discs.length})
+        <button className="btn btn--outline" onClick={download} disabled={discs.length === 0}>
+          Export · {discs.length}
         </button>
-        <button onClick={() => fileRef.current?.click()}>Import…</button>
+        <button className="btn btn--outline" onClick={() => fileRef.current?.click()}>Import…</button>
         <input
           ref={fileRef}
           type="file"
@@ -48,11 +49,13 @@ export function DatabasePanel() {
           style={{ display: "none" }}
         />
       </div>
-      {msg && <p>{msg}</p>}
-      <p style={{ color: "#666", fontSize: 13 }}>
+
+      {msg && <p className="muted" style={{ marginTop: 12 }}>{msg}</p>}
+
+      <p className="muted" style={{ marginTop: 14 }}>
         Backup format: <code>zzz-optimizer</code> v1. Importing replaces the current inventory.
         ZZZOD scanner import and Enka UID import are planned next.
       </p>
-    </section>
+    </div>
   );
 }

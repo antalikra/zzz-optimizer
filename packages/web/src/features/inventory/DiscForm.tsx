@@ -29,56 +29,73 @@ export function DiscForm() {
   }
 
   return (
-    <div style={{ border: "1px solid #ccc", padding: 12, marginBottom: 16 }}>
-      <h3>Add disc</h3>
+    <div className="card">
+      <h3 className="card__title">Add disc</h3>
+
       <div className="row">
-        <label>Slot{" "}
-          <select value={slot} onChange={(e) => setSlot(Number(e.target.value))}>
+        <label className="field">
+          <span className="field__label">Slot</span>
+          <select className="select w-xs" value={slot} onChange={(e) => setSlot(Number(e.target.value))}>
             {[1, 2, 3, 4, 5, 6].map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </label>
-        <label>Set{" "}
-          <select value={set} onChange={(e) => setSet(e.target.value)}>
+        <label className="field">
+          <span className="field__label">Set</span>
+          <select className="select w-md" value={set} onChange={(e) => setSet(e.target.value)}>
             {SETS.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </label>
-        <label>Rarity{" "}
-          <select value={rarity} onChange={(e) => setRarity(e.target.value as "S" | "A" | "B")}>
+        <label className="field">
+          <span className="field__label">Rarity</span>
+          <select className="select w-xs" value={rarity} onChange={(e) => setRarity(e.target.value as "S" | "A" | "B")}>
             {["S", "A", "B"].map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
         </label>
-        <label>Level{" "}
-          <input type="number" min={0} max={15} value={level}
-            onChange={(e) => setLevel(Number(e.target.value))} style={{ width: 56 }} />
+        <label className="field">
+          <span className="field__label">Level</span>
+          <input className="input w-xs" type="number" min={0} max={15} value={level}
+            onChange={(e) => setLevel(Number(e.target.value))} />
         </label>
       </div>
 
-      <div className="row" style={{ marginTop: 8 }}>
-        <label>Main{" "}
-          <select value={mainStat} onChange={(e) => setMainStat(e.target.value as Stat)}>
+      <div className="row" style={{ marginTop: 14 }}>
+        <label className="field">
+          <span className="field__label">Main stat</span>
+          <select className="select w-md" value={mainStat} onChange={(e) => setMainStat(e.target.value as Stat)}>
             {SLOT_MAIN[slot].map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </label>
-        <input type="number" value={mainValue}
-          onChange={(e) => setMainValue(Number(e.target.value))} style={{ width: 80 }} />
+        <label className="field">
+          <span className="field__label">Value</span>
+          <input className="input w-sm" type="number" value={mainValue}
+            onChange={(e) => setMainValue(Number(e.target.value))} />
+        </label>
       </div>
 
-      <div style={{ marginTop: 8 }}>
-        <b>Substats</b>
-        {subs.map((s, i) => (
-          <div className="row" key={i} style={{ marginTop: 4 }}>
-            <select value={s.stat} onChange={(e) => setSub(i, { stat: e.target.value as Stat })}>
-              {SUBSTATS.map((st) => <option key={st} value={st}>{st}</option>)}
-            </select>
-            <input type="number" value={s.value}
-              onChange={(e) => setSub(i, { value: Number(e.target.value) })} style={{ width: 80 }} />
-            <button onClick={() => removeSub(i)}>✕</button>
-          </div>
-        ))}
-        {subs.length < 4 && <button onClick={addSub} style={{ marginTop: 4 }}>+ substat</button>}
+      <div style={{ marginTop: 16 }}>
+        <span className="field__label">Substats</span>
+        <div className="stack" style={{ gap: 8, marginTop: 6 }}>
+          {subs.map((s, i) => (
+            <div className="row" key={i} style={{ gap: 8 }}>
+              <select className="select w-md" value={s.stat} onChange={(e) => setSub(i, { stat: e.target.value as Stat })}>
+                {SUBSTATS.map((st) => <option key={st} value={st}>{st}</option>)}
+              </select>
+              <input className="input w-sm" type="number" value={s.value}
+                onChange={(e) => setSub(i, { value: Number(e.target.value) })} />
+              <button className="btn btn--icon btn--ghost" title="Remove" onClick={() => removeSub(i)}>✕</button>
+            </div>
+          ))}
+          {subs.length < 4 && (
+            <div>
+              <button className="btn btn--ghost btn--sm" onClick={addSub}>+ substat</button>
+            </div>
+          )}
+        </div>
       </div>
 
-      <button onClick={submit} style={{ marginTop: 12 }}>Add to inventory</button>
+      <div style={{ marginTop: 18 }}>
+        <button className="btn btn--primary" onClick={submit}>Add to inventory</button>
+      </div>
     </div>
   );
 }

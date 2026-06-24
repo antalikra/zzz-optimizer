@@ -41,7 +41,6 @@ export function OptimizerPanel() {
   const [weights, setWeights] = useState<Record<string, number>>({
     CritRate: 2, CritDmg: 1, AtkPct: 1, Atk: 0.001, IceDmg: 1,
   });
-  // Damage-objective inputs
   const [wEngineAtk, setWEngineAtk] = useState(684);
   const [skillMv, setSkillMv] = useState(1.5);
   const [enemyDef, setEnemyDef] = useState(600);
@@ -52,7 +51,6 @@ export function OptimizerPanel() {
   const [resp, setResp] = useState<SolveResponse | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  // Fall back off "damage" if the chosen agent has no damage formula.
   useEffect(() => {
     if (!canDamage && kind === "damage") setKind("weighted");
   }, [canDamage, kind]);
@@ -95,53 +93,61 @@ export function OptimizerPanel() {
   }
 
   return (
-    <section>
-      <h3>Optimize</h3>
+    <div className="card">
+      <h3 className="card__title">Optimize</h3>
 
       <div className="row">
-        <label>Agent{" "}
-          <select value={agentId} onChange={(e) => setAgentId(e.target.value)}>
+        <label className="field">
+          <span className="field__label">Agent</span>
+          <select className="select w-md" value={agentId} onChange={(e) => setAgentId(e.target.value)}>
             {AGENTS.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
         </label>
-        <label>Objective{" "}
-          <select value={kind} onChange={(e) => setKind(e.target.value as Kind)}>
+        <label className="field">
+          <span className="field__label">Objective</span>
+          <select className="select w-md" value={kind} onChange={(e) => setKind(e.target.value as Kind)}>
             {canDamage && <option value="damage">damage</option>}
             <option value="weighted">weighted</option>
             <option value="maxStat">maxStat</option>
           </select>
         </label>
-        <label>Top N{" "}
-          <input type="number" min={1} max={50} value={topN}
-            onChange={(e) => setTopN(Number(e.target.value))} style={{ width: 56 }} />
+        <label className="field">
+          <span className="field__label">Top N</span>
+          <input className="input w-xs" type="number" min={1} max={50} value={topN}
+            onChange={(e) => setTopN(Number(e.target.value))} />
         </label>
       </div>
 
       {kind === "damage" && (
-        <div className="row" style={{ marginTop: 8 }}>
-          <label>W-Engine ATK{" "}
-            <input type="number" value={wEngineAtk}
-              onChange={(e) => setWEngineAtk(Number(e.target.value))} style={{ width: 80 }} />
+        <div className="row" style={{ marginTop: 14 }}>
+          <label className="field">
+            <span className="field__label">W-Engine ATK</span>
+            <input className="input w-sm" type="number" value={wEngineAtk}
+              onChange={(e) => setWEngineAtk(Number(e.target.value))} />
           </label>
-          <label>Skill MV{" "}
-            <input type="number" step="0.1" value={skillMv}
-              onChange={(e) => setSkillMv(Number(e.target.value))} style={{ width: 64 }} />
+          <label className="field">
+            <span className="field__label">Skill MV</span>
+            <input className="input w-xs" type="number" step="0.1" value={skillMv}
+              onChange={(e) => setSkillMv(Number(e.target.value))} />
           </label>
-          <label>Enemy DEF{" "}
-            <input type="number" value={enemyDef}
-              onChange={(e) => setEnemyDef(Number(e.target.value))} style={{ width: 72 }} />
+          <label className="field">
+            <span className="field__label">Enemy DEF</span>
+            <input className="input w-sm" type="number" value={enemyDef}
+              onChange={(e) => setEnemyDef(Number(e.target.value))} />
           </label>
-          <label>RES mult{" "}
-            <input type="number" step="0.05" value={resMult}
-              onChange={(e) => setResMult(Number(e.target.value))} style={{ width: 64 }} />
+          <label className="field">
+            <span className="field__label">RES mult</span>
+            <input className="input w-xs" type="number" step="0.05" value={resMult}
+              onChange={(e) => setResMult(Number(e.target.value))} />
           </label>
         </div>
       )}
 
       {kind === "maxStat" && (
-        <div className="row" style={{ marginTop: 8 }}>
-          <label>Stat{" "}
-            <select value={maxStat} onChange={(e) => setMaxStat(e.target.value as Stat)}>
+        <div className="row" style={{ marginTop: 14 }}>
+          <label className="field">
+            <span className="field__label">Stat</span>
+            <select className="select w-md" value={maxStat} onChange={(e) => setMaxStat(e.target.value as Stat)}>
               {WEIGHT_STATS.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </label>
@@ -149,46 +155,56 @@ export function OptimizerPanel() {
       )}
 
       {kind === "weighted" && (
-        <div className="row" style={{ marginTop: 8 }}>
+        <div className="row" style={{ marginTop: 14 }}>
           {WEIGHT_STATS.map((s) => (
-            <label key={s}>{s}{" "}
-              <input type="number" step="0.1" value={weights[s] ?? 0}
-                onChange={(e) => setWeights((w) => ({ ...w, [s]: Number(e.target.value) }))}
-                style={{ width: 64 }} />
+            <label className="field" key={s}>
+              <span className="field__label">{s}</span>
+              <input className="input w-xs" type="number" step="0.1" value={weights[s] ?? 0}
+                onChange={(e) => setWeights((w) => ({ ...w, [s]: Number(e.target.value) }))} />
             </label>
           ))}
         </div>
       )}
 
-      <div style={{ marginTop: 12 }}>
-        <button onClick={run} disabled={running || !ready}>{running ? "Running…" : "Optimize"}</button>
-        {!ready && <span style={{ marginLeft: 8, color: "#a00" }}>Need ≥1 disc in every slot 1–6.</span>}
+      <div className="row" style={{ marginTop: 20, alignItems: "center" }}>
+        <button className="btn btn--primary" onClick={run} disabled={running || !ready}>
+          {running ? "Running…" : "Optimize"}
+        </button>
+        {!ready && <span className="error-text">Need ≥1 disc in every slot 1–6.</span>}
       </div>
 
-      {err && <p style={{ color: "#a00" }}>Error: {err}</p>}
+      {err && <p className="error-text" style={{ marginTop: 12 }}>Error: {err}</p>}
 
       {resp?.status === "ok" && (
-        <table style={{ marginTop: 12 }}>
-          <thead><tr><th>#</th><th>Score</th><th>Discs (slot:set)</th></tr></thead>
-          <tbody>
-            {resp.builds.map((b, i) => (
-              <tr key={i}>
-                <td>{i + 1}</td>
-                <td>{b.score.toFixed(2)}</td>
-                <td>
-                  {b.discIds
-                    .map((id) => {
-                      const d = byId.get(id);
-                      return d ? `${d.slot}:${d.set}` : String(id);
-                    })
-                    .join(" · ")}
-                </td>
+        <div className="tbl-wrap" style={{ marginTop: 18 }}>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th className="tbl__num">Score</th>
+                <th>Discs (slot : set)</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {resp.builds.map((b, i) => (
+                <tr key={i}>
+                  <td><span className="badge badge--accent">{i + 1}</span></td>
+                  <td className="tbl__num">{b.score.toFixed(2)}</td>
+                  <td className="muted">
+                    {b.discIds
+                      .map((id) => {
+                        const d = byId.get(id);
+                        return d ? `${d.slot}:${d.set}` : String(id);
+                      })
+                      .join("  ·  ")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
-      {resp?.status === "error" && <p style={{ color: "#a00" }}>Solver error: {resp.message}</p>}
-    </section>
+      {resp?.status === "error" && <p className="error-text" style={{ marginTop: 12 }}>Solver error: {resp.message}</p>}
+    </div>
   );
 }
