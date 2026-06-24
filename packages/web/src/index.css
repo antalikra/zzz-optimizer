@@ -1,0 +1,58 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  color: #1a1a1a;
+}
+
+button {
+  cursor: pointer;
+  padding: 4px 10px;
+  border: 1px solid #bbb;
+  background: #f6f6f6;
+  border-radius: 4px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 8px;
+}
+
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 4px 8px;
+  text-align: left;
+  font-size: 14px;
+}
+
+input,
+select {
+  padding: 3px;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.tabs button {
+  margin-right: 4px;
+}
+
+.tab-active {
+  font-weight: bold;
+  background: #e6efff;
+  border-color: #88a;
+}
