@@ -1,0 +1,21 @@
+[
+  {
+    "id": "ellen",
+    "name": "Ellen Joe",
+    "rarity": "S",
+    "element": "Ice",
+    "specialty": "Attack",
+    "faction": "Victoria Housekeeping",
+    "baseStats": {
+      "hp": 7673,
+      "atk": 938,
+      "def": 607,
+      "critRate": 5.0,
+      "critDmg": 50.0,
+      "anomalyProficiency": 92,
+      "anomalyMastery": 92,
+      "impact": 61,
+      "energyRegen": 1.2
+    }
+  }
+]

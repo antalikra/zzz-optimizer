@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ZZZ W-Engines",
+  "definitions": {
+    "stat": {
+      "enum": ["Hp", "HpPct", "Atk", "AtkPct", "Def", "DefPct", "CritRate", "CritDmg", "Pen", "PenRatio", "AnomalyProficiency", "AnomalyMastery", "Impact", "EnergyRegen", "SheerForce", "PhysicalDmg", "FireDmg", "IceDmg", "ElectricDmg", "EtherDmg"]
+    }
+  },
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "name", "rarity", "baseAtk", "advancedStat"],
+    "properties": {
+      "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+      "name": { "type": "string", "minLength": 1 },
+      "rarity": { "enum": ["S", "A", "B"] },
+      "baseAtk": { "type": "number", "exclusiveMinimum": 0 },
+      "advancedStat": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["stat", "value"],
+        "properties": {
+          "stat": { "$ref": "#/definitions/stat" },
+          "value": { "type": "number", "exclusiveMinimum": 0 }
+        }
+      },
+      "passive": {
+        "type": "object",
+        "required": ["description"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    }
+  }
+}

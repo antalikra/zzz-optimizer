@@ -1,0 +1,43 @@
+{
+  "slotMainStats": {
+    "1": ["Hp"],
+    "2": ["Atk"],
+    "3": ["Def"],
+    "4": ["CritRate", "CritDmg", "AtkPct", "HpPct", "DefPct", "AnomalyProficiency"],
+    "5": ["AtkPct", "HpPct", "DefPct", "PenRatio", "PhysicalDmg", "FireDmg", "IceDmg", "ElectricDmg", "EtherDmg"],
+    "6": ["AtkPct", "HpPct", "DefPct", "AnomalyMastery", "Impact", "EnergyRegen"]
+  },
+  "mainStatMaxSRank": {
+    "Hp": 2200,
+    "Atk": 316,
+    "Def": 184,
+    "HpPct": 30.0,
+    "AtkPct": 30.0,
+    "DefPct": 48.0,
+    "CritRate": 24.0,
+    "CritDmg": 48.0,
+    "AnomalyProficiency": 92,
+    "AnomalyMastery": 30.0,
+    "Impact": 18.0,
+    "EnergyRegen": 60.0,
+    "PenRatio": 24.0,
+    "PhysicalDmg": 30.0,
+    "FireDmg": 30.0,
+    "IceDmg": 30.0,
+    "ElectricDmg": 30.0,
+    "EtherDmg": 30.0
+  },
+  "substats": ["Hp", "HpPct", "Atk", "AtkPct", "Def", "DefPct", "CritRate", "CritDmg", "AnomalyProficiency", "Pen"],
+  "substatRollMaxSRank": {
+    "Hp": 112,
+    "HpPct": 3.0,
+    "Atk": 19,
+    "AtkPct": 3.0,
+    "Def": 15,
+    "DefPct": 4.8,
+    "CritRate": 2.4,
+    "CritDmg": 4.8,
+    "AnomalyProficiency": 9,
+    "Pen": 9
+  }
+}

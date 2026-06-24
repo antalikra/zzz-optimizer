@@ -1,0 +1,24 @@
+[
+  {
+    "id": "deep-sea-visitor",
+    "name": "Deep Sea Visitor",
+    "rarity": "S",
+    "baseAtk": 684,
+    "advancedStat": { "stat": "CritRate", "value": 24.0 },
+    "passive": {
+      "name": "Lonely Hungry Child",
+      "description": "Increases Ice DMG; landing a hit on an enemy affected by Ice further increases CRIT Rate for a duration. (structured in Phase 2)"
+    }
+  },
+  {
+    "id": "starlight-engine",
+    "name": "Starlight Engine",
+    "rarity": "A",
+    "baseAtk": 594,
+    "advancedStat": { "stat": "AtkPct", "value": 30.0 },
+    "passive": {
+      "name": "Overclock",
+      "description": "Increases ATK; after switching in or launching a Dash Attack, ATK is further increased for a duration. (structured in Phase 2)"
+    }
+  }
+]

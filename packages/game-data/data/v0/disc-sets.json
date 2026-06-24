@@ -1,0 +1,26 @@
+[
+  {
+    "id": "polar-metal",
+    "name": "Polar Metal",
+    "twoPiece": { "stat": "IceDmg", "value": 10.0 },
+    "fourPiece": {
+      "description": "Increases Basic Attack and Dash Attack DMG; further increased against frozen or shattered enemies. (structured in Phase 2)"
+    }
+  },
+  {
+    "id": "woodpecker-electro",
+    "name": "Woodpecker Electro",
+    "twoPiece": { "stat": "CritRate", "value": 8.0 },
+    "fourPiece": {
+      "description": "Landing a CRIT with a Basic Attack, Dodge Counter, or EX Special increases ATK for a duration; stacks. (structured in Phase 2)"
+    }
+  },
+  {
+    "id": "hormone-punk",
+    "name": "Hormone Punk",
+    "twoPiece": { "stat": "AtkPct", "value": 10.0 },
+    "fourPiece": {
+      "description": "On entering combat or switching in, increases ATK for a duration. (structured in Phase 2)"
+    }
+  }
+]

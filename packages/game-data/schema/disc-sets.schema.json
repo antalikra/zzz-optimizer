@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ZZZ Drive Disc sets",
+  "definitions": {
+    "stat": {
+      "enum": ["Hp", "HpPct", "Atk", "AtkPct", "Def", "DefPct", "CritRate", "CritDmg", "Pen", "PenRatio", "AnomalyProficiency", "AnomalyMastery", "Impact", "EnergyRegen", "SheerForce", "PhysicalDmg", "FireDmg", "IceDmg", "ElectricDmg", "EtherDmg"]
+    }
+  },
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "name", "twoPiece"],
+    "properties": {
+      "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+      "name": { "type": "string", "minLength": 1 },
+      "twoPiece": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["stat", "value"],
+        "properties": {
+          "stat": { "$ref": "#/definitions/stat" },
+          "value": { "type": "number", "exclusiveMinimum": 0 }
+        }
+      },
+      "fourPiece": {
+        "type": "object",
+        "required": ["description"],
+        "properties": {
+          "description": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

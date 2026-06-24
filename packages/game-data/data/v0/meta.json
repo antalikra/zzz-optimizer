@@ -1,0 +1,6 @@
+{
+  "version": "v0-draft",
+  "accurate": false,
+  "patch": "unknown",
+  "note": "Bootstrap data for pipeline development. Numbers are approximate and MUST be verified against the game data source before being trusted. Stat references are raw string ids; they are mapped to typed stats by the formula engine in Phase 2."
+}

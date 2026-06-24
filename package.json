@@ -11,6 +11,10 @@
     "build:wasm": "wasm-pack build packages/core-solver --target web --out-dir ../web/src/wasm --out-name core_solver",
     "dev": "pnpm --filter @zzz/web dev",
     "build": "pnpm --filter @zzz/web build",
+    "validate:data": "node tools/validate-data.mjs",
     "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1"
   }
 }

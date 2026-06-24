@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ZZZ agents",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "name", "rarity", "element", "specialty", "faction", "baseStats"],
+    "properties": {
+      "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+      "name": { "type": "string", "minLength": 1 },
+      "rarity": { "enum": ["S", "A"] },
+      "element": { "enum": ["Physical", "Fire", "Ice", "Electric", "Ether"] },
+      "specialty": { "enum": ["Attack", "Stun", "Anomaly", "Support", "Defense"] },
+      "faction": { "type": "string", "minLength": 1 },
+      "baseStats": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["hp", "atk", "def", "critRate", "critDmg", "anomalyProficiency", "anomalyMastery", "impact", "energyRegen"],
+        "properties": {
+          "hp": { "type": "number", "exclusiveMinimum": 0 },
+          "atk": { "type": "number", "exclusiveMinimum": 0 },
+          "def": { "type": "number", "exclusiveMinimum": 0 },
+          "critRate": { "type": "number", "minimum": 0 },
+          "critDmg": { "type": "number", "minimum": 0 },
+          "anomalyProficiency": { "type": "number", "minimum": 0 },
+          "anomalyMastery": { "type": "number", "minimum": 0 },
+          "impact": { "type": "number", "minimum": 0 },
+          "energyRegen": { "type": "number", "minimum": 0 }
+        }
+      }
+    }
+  }
+}
